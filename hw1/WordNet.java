@@ -1,19 +1,21 @@
 import java.lang.IllegalArgumentException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import edu.princeton.cs.algs4.Digraph;
 import edu.princeton.cs.algs4.In;
 
 public class WordNet {
 
-    private Map<String, Integer> nounToSynsetIdMap;
+    private Map<String, Set<Integer>> nounToSynsetIdsMap;
     private Map<Integer, String> synsetIdToSynsetMap;
     private SAP sap;
 
     // constructor takes the name of the two input files
     public WordNet(String synsets, String hypernyms) {
-        this.nounToSynsetIdMap = new HashMap<>();
+        this.nounToSynsetIdsMap = new HashMap<>();
         this.synsetIdToSynsetMap = new HashMap<>();
 
         In in = new In(synsets);
@@ -25,7 +27,11 @@ public class WordNet {
 
             String[] nouns = synset.split(" ");
             for (int i = 0; i < nouns.length; ++i) {
-                nounToSynsetIdMap.put(nouns[i], synsetId);
+                if (!nounToSynsetIdsMap.containsKey(nouns[i])) {
+                    nounToSynsetIdsMap.put(nouns[i], new HashSet<>());
+                }
+
+                nounToSynsetIdsMap.get(nouns[i]).add(synsetId);
             }
         }
 
@@ -44,12 +50,12 @@ public class WordNet {
 
     // returns all WordNet nouns
     public Iterable<String> nouns() {
-        return nounToSynsetIdMap.keySet();
+        return nounToSynsetIdsMap.keySet();
     }
 
     // is the word a WordNet noun?
     public boolean isNoun(String word) {
-        return nounToSynsetIdMap.containsKey(word);
+        return nounToSynsetIdsMap.containsKey(word);
     }
 
     // distance between nounA and nounB (defined below)
@@ -58,7 +64,10 @@ public class WordNet {
             throw new IllegalArgumentException();
         }
 
-        return sap.length(nounToSynsetIdMap.get(nounA), nounToSynsetIdMap.get(nounB));
+        Iterable<Integer> nounASynsetIds = nounToSynsetIdsMap.get(nounA);
+        Iterable<Integer> nounBSynsetIds = nounToSynsetIdsMap.get(nounB);
+
+        return sap.length(nounASynsetIds, nounBSynsetIds);
     }
 
     // a synset (second field of synsets.txt) that is the common ancestor of nounA and nounB
@@ -69,7 +78,10 @@ public class WordNet {
         }
 
         String synset = "";
-        int ancestor = sap.ancestor(nounToSynsetIdMap.get(nounA), nounToSynsetIdMap.get(nounB));
+        Iterable<Integer> nounASynsetIds = nounToSynsetIdsMap.get(nounA);
+        Iterable<Integer> nounBSynsetIds = nounToSynsetIdsMap.get(nounB);
+        int ancestor = sap.ancestor(nounASynsetIds, nounBSynsetIds);
+
         if (ancestor != -1) {
             synset = synsetIdToSynsetMap.get(ancestor);
         }
@@ -80,8 +92,13 @@ public class WordNet {
     // do unit testing of this class
     public static void main(String[] args) {
         WordNet wn = new WordNet(args[0], args[1]);
-        System.out.println(wn.sap("Actifed", "Coricidin"));  // Should return "antihistamine"
-        System.out.println(wn.sap("Aegisthus", "antihistamine"));  // Should return ""
+        // System.out.println(wn.sap("Actifed", "Coricidin"));  // Should return "antihistamine"
+        // System.out.println(wn.sap("Aegisthus", "antihistamine"));  // Should return ""
+        System.out.println(wn.distance("horse", "zebra"));
+        System.out.println(wn.sap("horse", "zebra"));
+
+        System.out.println(wn.distance("horse", "table"));
+        System.out.println(wn.sap("horse", "table"));
     }
 }
 
