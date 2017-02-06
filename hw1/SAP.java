@@ -26,7 +26,7 @@ public class SAP {
             int v = queue.remove();
             int distanceToV = distancesFromS.get(v);
             for (int adjacentToV : G.adj(v)) {
-                if (!distancesFromS.containsKey(adjacentToV)) {  // TODO: We can optimize by reducing autoboxing
+                if (!distancesFromS.containsKey(adjacentToV)) {
                     queue.add(adjacentToV);
                     distancesFromS.put(adjacentToV, distanceToV + 1);
                 }
@@ -37,8 +37,8 @@ public class SAP {
     }
 
     private static class NearestAncestor {
-        int ancestor;
-        int distance;
+        private int ancestor;
+        private int distance;
 
         public NearestAncestor(int ancestor, int distance) {
             this.ancestor = ancestor;
@@ -47,14 +47,13 @@ public class SAP {
     }
 
     private Optional<NearestAncestor> getNearestAncestor(int v, int w) {
-        Optional<NearestAncestor> nearestAncestor = Optional.empty();
         Map<Integer, Integer> distancesFromV = bfs(v);
         Map<Integer, Integer> distancesFromW = bfs(w);
         int ancestor = -1;
         int minDistance = Integer.MAX_VALUE;
 
         for (Map.Entry<Integer, Integer> distanceFromV : distancesFromV.entrySet()) {
-            Integer x = distanceFromV.getKey();
+            int x = distanceFromV.getKey();
             if (distancesFromW.containsKey(x)) {
                 if (minDistance > distancesFromV.get(x) + distancesFromW.get(x)) {
                     ancestor = x;
@@ -63,11 +62,32 @@ public class SAP {
             }
         }
 
-        if (ancestor != -1) {
-            nearestAncestor = Optional.of(new NearestAncestor(ancestor, minDistance));
+        if (ancestor == -1) {
+            return Optional.empty();
+        } else {
+            return Optional.of(new NearestAncestor(ancestor, minDistance));
+        }
+    }
+
+    private Optional<NearestAncestor> getNearestAncestor(Iterable<Integer> vs, Iterable<Integer> ws) {
+        int ancestor = -1;
+        int minDistance = Integer.MAX_VALUE;
+
+        for (int v : vs) {
+            for (int w : ws) {
+                Optional<NearestAncestor> nearestAncestor = getNearestAncestor(v, w);
+                if (nearestAncestor.isPresent() && nearestAncestor.get().distance < minDistance) {
+                    ancestor = nearestAncestor.get().ancestor;
+                    minDistance = nearestAncestor.get().distance;
+                }
+            }
         }
 
-        return nearestAncestor;
+        if (ancestor == -1) {
+            return Optional.empty();
+        } else {
+            return Optional.of(new NearestAncestor(ancestor, minDistance));
+        }
     }
 
     // length of shortest ancestral path between v and w; -1 if no such path
@@ -96,40 +116,22 @@ public class SAP {
 
     // length of shortest ancestral path between any v in v and any v in w; -1 if no such path
     public int length(Iterable<Integer> vs, Iterable<Integer> ws) {
-        int minDistance = Integer.MAX_VALUE;
-
-        for (Integer v : vs) {
-            for (Integer w : ws) {
-                int distance = length(v, w);
-                if (distance != -1 && distance < minDistance) {
-                    minDistance = distance;
-                }
-            }
+        Optional<NearestAncestor> nearestAncestor = getNearestAncestor(vs, ws);
+        if (nearestAncestor.isPresent()) {
+            return nearestAncestor.get().distance;
+        } else {
+            return -1;
         }
-
-        if (minDistance == Integer.MAX_VALUE) {
-            minDistance = -1;
-        }
-
-        return minDistance;
     }
 
     // a common ancestor that participates in shortest ancestral path; -1 if no such path
     public int ancestor(Iterable<Integer> vs, Iterable<Integer> ws) {
-        int minAncestor = -1;
-        int minDistance = Integer.MAX_VALUE;
-
-        for (Integer v : vs) {
-            for (Integer w : ws) {
-                Optional<NearestAncestor> nearestAncestor = getNearestAncestor(v, w);
-                if (nearestAncestor.isPresent() && nearestAncestor.get().distance < minDistance) {
-                    minAncestor = nearestAncestor.get().ancestor;
-                    minDistance = nearestAncestor.get().distance;
-                }
-            }
+        Optional<NearestAncestor> nearestAncestor = getNearestAncestor(vs, ws);
+        if (nearestAncestor.isPresent()) {
+            return nearestAncestor.get().ancestor;
+        } else {
+            return -1;
         }
-
-        return minAncestor;
     }
 
     // do unit testing of this class

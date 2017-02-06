@@ -1,3 +1,5 @@
+import java.util.Arrays;
+
 import edu.princeton.cs.algs4.In;
 
 public class Outcast {
@@ -8,9 +10,19 @@ public class Outcast {
         this.wn = wordnet;
     }
 
+    private int[][] initializeCache(int size) {
+        int[][] cache = new int[size][size];
+        for (int i = 0; i < size; ++i) {
+            Arrays.fill(cache[i], -1);
+        }
+
+        return cache;
+    }
+
     public String outcast(String[] nouns) {  // given an array of WordNet nouns, return an outcast
         int maxDistance = Integer.MIN_VALUE;
         String outcast = "";
+        int[][] cache = initializeCache(nouns.length);
 
         for (int i = 0; i < nouns.length; ++i) {
             int distance = 0;
@@ -19,8 +31,12 @@ public class Outcast {
                     continue;
                 }
 
-                // TODO: optimize by caching results instead of recomputing, distance(a, b) == distance(b, a)
-                distance += wn.distance(nouns[i], nouns[j]);;
+                if (cache[i][j] == -1) {
+                    cache[i][j] = wn.distance(nouns[i], nouns[j]);
+                    cache[j][i] = cache[i][j];
+                }
+
+                distance += cache[i][j];
             }
 
             if (distance > maxDistance) {

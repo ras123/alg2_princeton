@@ -1,4 +1,3 @@
-import java.lang.IllegalArgumentException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -21,7 +20,7 @@ public class WordNet {
         In in = new In(synsets);
         while (in.hasNextLine()) {
             String[] tokens = in.readLine().split(",");
-            Integer synsetId = Integer.parseInt(tokens[0]);
+            int synsetId = Integer.parseInt(tokens[0]);
             String synset = tokens[1];
             synsetIdToSynsetMap.put(synsetId, synset);
 
