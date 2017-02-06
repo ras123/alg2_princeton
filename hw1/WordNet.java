@@ -44,7 +44,76 @@ public class WordNet {
             }
         }
 
+        DAGValidator dagValidator = new DAGValidator(G);
+        if (!dagValidator.hasSingleRoot() || dagValidator.hasCycle()) {
+            throw new IllegalArgumentException();
+        }
+
         this.sap = new SAP(G);
+    }
+
+    private static class DAGValidator {
+
+        private Digraph G;
+        private boolean[] visited;
+        private boolean[] onStack;
+
+        public DAGValidator(Digraph G) {
+            this.G = G;
+            this.visited = new boolean[G.V()];
+            this.onStack = new boolean[G.V()];
+        }
+
+        public boolean hasSingleRoot() {
+            // Root for the DAG has at least one incoming edge and no outgoing edges`
+            boolean foundRoot = false;
+            for (int v = 0; v < G.V(); ++v) {
+                if (G.outdegree(v) == 0 && G.indegree(v) > 0) {
+                    if (foundRoot) {
+                        return false;
+                    } else {
+                        foundRoot = true;
+                    }
+                }
+            }
+
+            if (!foundRoot) {
+                return false;
+            }
+
+            return true;
+        }
+
+        public boolean hasCycle() {
+            for (int v = 0; v < G.V(); ++v) {
+                if (!visited[v]) {
+                    if (dfs(v)) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private boolean dfs(int v) {
+            visited[v] = true;
+            onStack[v] = true;
+
+            for (int w : G.adj(v)) {
+                if (!visited[w]) {
+                    if (dfs(w)) {
+                        return true;
+                    }
+                } else if (onStack[w]) {
+                    return true;
+                }
+            }
+
+            onStack[v] = false;
+
+            return false;
+        }
     }
 
     // returns all WordNet nouns
@@ -54,6 +123,10 @@ public class WordNet {
 
     // is the word a WordNet noun?
     public boolean isNoun(String word) {
+        if (word == null) {
+            throw new NullPointerException();
+        }
+
         return nounToSynsetIdsMap.containsKey(word);
     }
 

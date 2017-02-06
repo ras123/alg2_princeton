@@ -13,7 +13,19 @@ public class SAP {
 
     // constructor takes a digraph (not necessarily a DAG)
     public SAP(Digraph G) {
-        this.G = G;
+        this.G = new Digraph(G);
+    }
+
+    private void validateArguments(int v, int w) {
+        if ((v < 0 || v > G.V() - 1) || (w < 0 || w > G.V() - 1)) {
+            throw new IndexOutOfBoundsException();
+        }
+    }
+
+    private void validateArguments(Iterable<Integer> vs, Iterable<Integer> ws) {
+        if (vs == null || ws == null) {
+            throw new NullPointerException();
+        }
     }
 
     private Map<Integer, Integer> bfs(int s) {
@@ -92,6 +104,8 @@ public class SAP {
 
     // length of shortest ancestral path between v and w; -1 if no such path
     public int length(int v, int w) {
+        validateArguments(v, w);
+
         int distance = -1;
         Optional<NearestAncestor> nearestAncestor = getNearestAncestor(v, w);
 
@@ -104,6 +118,8 @@ public class SAP {
 
     // a common ancestor of v and w that participates in a shortest ancestral path; -1 if no such path
     public int ancestor(int v, int w) {
+        validateArguments(v, w);
+
         int ancestor = -1;
         Optional<NearestAncestor> nearestAncestor = getNearestAncestor(v, w);
 
@@ -116,6 +132,8 @@ public class SAP {
 
     // length of shortest ancestral path between any v in v and any v in w; -1 if no such path
     public int length(Iterable<Integer> vs, Iterable<Integer> ws) {
+        validateArguments(vs, ws);
+
         Optional<NearestAncestor> nearestAncestor = getNearestAncestor(vs, ws);
         if (nearestAncestor.isPresent()) {
             return nearestAncestor.get().distance;
@@ -126,6 +144,8 @@ public class SAP {
 
     // a common ancestor that participates in shortest ancestral path; -1 if no such path
     public int ancestor(Iterable<Integer> vs, Iterable<Integer> ws) {
+        validateArguments(vs, ws);
+
         Optional<NearestAncestor> nearestAncestor = getNearestAncestor(vs, ws);
         if (nearestAncestor.isPresent()) {
             return nearestAncestor.get().ancestor;
