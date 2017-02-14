@@ -8,6 +8,8 @@ public class SeamCarver {
     private static int BORDER_ENERGY = 1000;
     private Picture picture;
     private double[][] energyMatrix;
+    private SeamStrategy horizontalSeamStrategy;
+    private SeamStrategy verticalSeamStrategy;
 
     public SeamCarver(Picture picture) {
         this.picture = picture;
@@ -17,6 +19,9 @@ public class SeamCarver {
                 energyMatrix[row][col] = energy(col, row);
             }
         }
+
+        this.horizontalSeamStrategy = new HorizontalSeamStrategy(energyMatrix);
+        this.verticalSeamStrategy = new VerticalSeamStrategy(energyMatrix);
     }
 
     public Picture picture() {
@@ -57,35 +62,41 @@ public class SeamCarver {
     }
 
     public int[] findHorizontalSeam() {
-        return null;
+        return findSeam(horizontalSeamStrategy);
     }
 
     public int[] findVerticalSeam() {
-        double[][] minDistTo = new double[picture.height()][picture.width()];
+        return findSeam(verticalSeamStrategy);
+    }
+
+    private int[] findSeam(SeamStrategy seamStrategy) {
+        final int width = seamStrategy.getWidth();
+        final int height = seamStrategy.getHeight();
+        double[][] minDistTo = new double[height][width];
         Arrays.fill(minDistTo[0], BORDER_ENERGY);
-        int[][] minEdgeTo = new int[picture.height()][picture.width()];
+        int[][] minEdgeTo = new int[height][width];
         double minTotalEnergy = Double.MAX_VALUE;
         int minPathEndIdx = Integer.MAX_VALUE;
 
         // Traverse the DAG down row by row and store the lowest energy path and corresponding pixel's position
-        for (int row = 1; row < picture.height(); ++row) {
-            for (int col = 0; col < picture.width(); ++col) {
+        for (int row = 1; row < height; ++row) {
+            for (int col = 0; col < width; ++col) {
                 double upperLeft = (col == 0) ? Double.MAX_VALUE : minDistTo[row - 1][col - 1];
                 double upperCenter = minDistTo[row - 1][col];
-                double upperRight = (col == picture.width() - 1) ? Double.MAX_VALUE : minDistTo[row - 1][col + 1];
+                double upperRight = (col == width - 1) ? Double.MAX_VALUE : minDistTo[row - 1][col + 1];
 
                 if (upperLeft <= upperCenter && upperLeft <= upperRight) {
-                    minDistTo[row][col] = upperLeft + energyMatrix[row][col];
+                    minDistTo[row][col] = upperLeft + seamStrategy.getEnergy(row, col);
                     minEdgeTo[row][col] = col - 1;
                 } else if (upperCenter <= upperLeft && upperCenter <= upperRight) {
-                    minDistTo[row][col] = upperCenter + energyMatrix[row][col];
+                    minDistTo[row][col] = upperCenter + seamStrategy.getEnergy(row, col);
                     minEdgeTo[row][col] = col;
                 } else {
-                    minDistTo[row][col] = upperRight + energyMatrix[row][col];
+                    minDistTo[row][col] = upperRight + seamStrategy.getEnergy(row, col);
                     minEdgeTo[row][col] = col + 1;
                 }
 
-                if (row == picture.height() - 1) {
+                if (row == height - 1) {
                     if (minDistTo[row][col] < minTotalEnergy) {
                         minTotalEnergy = minDistTo[row][col];
                         minPathEndIdx = col;
@@ -94,10 +105,10 @@ public class SeamCarver {
             }
         }
 
-        // Find minimum energy path
-        int[] minPath = new int[picture.height()];
-        minPath[picture.height() - 1] = minPathEndIdx;
-        for (int i = picture.height() - 2; i >= 0; --i) {
+        // Reconstruct minimum energy path by following edges that got us to current vertex
+        int[] minPath = new int[height];
+        minPath[height - 1] = minPathEndIdx;
+        for (int i = height - 2; i >= 0; --i) {
             minPath[i] = minEdgeTo[i + 1][minPath[i + 1]];
         }
 
