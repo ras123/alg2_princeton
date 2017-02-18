@@ -1,20 +1,22 @@
 public class VerticalSeamStrategy implements SeamStrategy {
 
-	private double[][] energyMatrix;
+    private SeamCarver seamCarver;
+    private double[][] energyMatrix;
 
-	public VerticalSeamStrategy(double[][] energyMatrix) {
-		this.energyMatrix = energyMatrix;
-	}
+    public VerticalSeamStrategy(SeamCarver seamCarver, double[][] energyMatrix) {
+        this.seamCarver = seamCarver;
+        this.energyMatrix = energyMatrix;
+    }
 
-	public int getHeight() {
-		return energyMatrix.length;
-	}
+    public int getHeight() {
+        return seamCarver.height();
+    }
 
     public int getWidth() {
-    	return energyMatrix[0].length;
+        return seamCarver.width();
     }
 
     public double getEnergy(int row, int col) {
-    	return energyMatrix[row][col];
+        return energyMatrix[row][col];
     }
 }
