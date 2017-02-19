@@ -181,13 +181,19 @@ public class SeamCarver {
 
     private void removeSeam(int[] seam) {
         --pictureWidth;
-        for(int i = 0; i < seam.length; ++i) {
+        for (int i = 0; i < seam.length; ++i) {
             System.arraycopy(colorMatrix[i], seam[i] + 1, colorMatrix[i], seam[i], pictureWidth - seam[i]);
+            System.arraycopy(energyMatrix[i], seam[i] + 1, energyMatrix[i], seam[i], pictureWidth - seam[i]);
         }
 
-        // Update energy matrix, TODO: optimize since energies only change around the seam
+        // Update energy matrix
         for (int row = 0; row < pictureHeight; ++row) {
-            for (int col = 0; col < pictureWidth; ++col) {
+            int col = seam[row];
+            if (col != 0) {
+                energyMatrix[row][col - 1] = calculateEnergy(row, col - 1);
+            }
+
+            if (col != pictureWidth) {
                 energyMatrix[row][col] = calculateEnergy(row, col);
             }
         }
