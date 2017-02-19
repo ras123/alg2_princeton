@@ -12,7 +12,15 @@ public class SeamCarver {
     private double[][] energyMatrix;
     private boolean isPictureTransposed;
 
+    private enum SeamDirection {
+        VERTICAL, HORIZONTAL;
+    }
+
     public SeamCarver(Picture picture) {
+        if (picture == null) {
+            throw new NullPointerException();
+        }
+
         this.pictureWidth = picture.width();
         this.pictureHeight = picture.height();
         this.colorMatrix = new Color[pictureHeight][pictureWidth];
@@ -56,6 +64,10 @@ public class SeamCarver {
 
     // Energy of pixel at column x and row y
     public double energy(int x, int y) {
+        if (x < 0 || x >= width() || y < 0 || y >= height()) {
+            throw new IndexOutOfBoundsException();
+        }
+
         return isPictureTransposed ? energyMatrix[x][y] : energyMatrix[y][x];
     }
 
@@ -164,6 +176,8 @@ public class SeamCarver {
     }
 
     public void removeHorizontalSeam(int[] seam) {
+        validateSeam(seam, SeamDirection.HORIZONTAL);
+
         if (!isPictureTransposed) {
             transposePicture();
         }
@@ -172,11 +186,49 @@ public class SeamCarver {
     }
 
     public void removeVerticalSeam(int[] seam) {
+        validateSeam(seam, SeamDirection.VERTICAL);
+
         if (isPictureTransposed) {
             transposePicture();
         }
 
         removeSeam(seam);
+    }
+
+    private void validateSeam(int[] seam, SeamDirection seamDirection) {
+        if (seam == null) {
+            throw new NullPointerException();
+        }
+
+        int size;
+        switch (seamDirection) {
+            case HORIZONTAL:
+                if (height() <= 1 || seam.length != width()) {
+                    throw new IllegalArgumentException();
+                }
+                size = height();
+                break;
+            case VERTICAL:
+                if (width() <= 1 || seam.length != height()) {
+                    throw new IllegalArgumentException();
+                }
+                size = width();
+                break;
+            default:
+                throw new IllegalArgumentException();
+        }
+
+        for (int i = 0; i < seam.length; ++i) {
+            if (seam[i] < 0 || seam[i] >= size) {
+                throw new IllegalArgumentException();
+            }
+
+            if (i != seam.length - 1) {
+                if (Math.abs(seam[i] - seam[i + 1]) > 1) {
+                    throw new IllegalArgumentException();
+                }
+            }
+        }
     }
 
     private void removeSeam(int[] seam) {
