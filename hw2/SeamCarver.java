@@ -6,7 +6,6 @@ import edu.princeton.cs.algs4.Picture;
 public class SeamCarver {
 
     private static final int BORDER_ENERGY = 1000;
-    private Picture picture;
     private int pictureWidth;
     private int pictureHeight;
     private Color[][] colorMatrix;
@@ -14,7 +13,6 @@ public class SeamCarver {
     private boolean isPictureTransposed;
 
     public SeamCarver(Picture picture) {
-        this.picture = picture;
         this.pictureWidth = picture.width();
         this.pictureHeight = picture.height();
         this.colorMatrix = new Color[pictureHeight][pictureWidth];
@@ -35,8 +33,18 @@ public class SeamCarver {
     }
 
     public Picture picture() {
-        // TODO: We need to generate new picture from the current pixel matrix
-        return new Picture(picture);
+        if (isPictureTransposed) {
+            transposePicture();
+        }
+
+        Picture picture = new Picture(pictureWidth, pictureHeight);
+        for (int row = 0; row < pictureHeight; ++row) {
+            for (int col = 0; col < pictureWidth; ++col) {
+                picture.set(col, row, colorMatrix[row][col]);
+            }
+        }
+
+        return picture;
     }
 
     public int width() {
