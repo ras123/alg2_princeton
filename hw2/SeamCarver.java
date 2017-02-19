@@ -5,7 +5,7 @@ import edu.princeton.cs.algs4.Picture;
 
 public class SeamCarver {
 
-    private static int BORDER_ENERGY = 1000;
+    private static final int BORDER_ENERGY = 1000;
     private Picture picture;
     private int pictureWidth;
     private int pictureHeight;
@@ -77,7 +77,7 @@ public class SeamCarver {
 
     public int[] findHorizontalSeam() {
         if (!isPictureTransposed) {
-            transposeEnergyMatrix();
+            transposePicture();
         }
 
         return findSeam();
@@ -85,20 +85,23 @@ public class SeamCarver {
 
     public int[] findVerticalSeam() {
         if (isPictureTransposed) {
-            transposeEnergyMatrix();
+            transposePicture();
         }
 
         return findSeam();
     }
 
-    private void transposeEnergyMatrix() {
+    private void transposePicture() {
+        Color[][] colorMatrixTransposed = new Color[pictureWidth][pictureHeight];
         double[][] energyMatrixTransposed = new double[pictureWidth][pictureHeight];
         for (int row = 0; row < pictureHeight; ++row) {
             for (int col = 0; col < pictureWidth; ++col) {
+                colorMatrixTransposed[col][row] = colorMatrix[row][col];
                 energyMatrixTransposed[col][row] = energyMatrix[row][col];
             }
         }
 
+        colorMatrix = colorMatrixTransposed;
         energyMatrix = energyMatrixTransposed;
 
         int tmp = pictureWidth;
@@ -153,18 +156,31 @@ public class SeamCarver {
     }
 
     public void removeHorizontalSeam(int[] seam) {
+        if (!isPictureTransposed) {
+            transposePicture();
+        }
+
+        removeSeam(seam);
     }
 
     public void removeVerticalSeam(int[] seam) {
+        if (isPictureTransposed) {
+            transposePicture();
+        }
+
+        removeSeam(seam);
+    }
+
+    private void removeSeam(int[] seam) {
         --pictureWidth;
         for(int i = 0; i < seam.length; ++i) {
             System.arraycopy(colorMatrix[i], seam[i] + 1, colorMatrix[i], seam[i], pictureWidth - seam[i]);
         }
 
-        // Update energy matrix
+        // Update energy matrix, TODO: optimize since energies only change around the seam
         for (int row = 0; row < pictureHeight; ++row) {
             for (int col = 0; col < pictureWidth; ++col) {
-                energyMatrix[row][col] = energy(col, row);
+                energyMatrix[row][col] = calculateEnergy(row, col);
             }
         }
     }
