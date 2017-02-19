@@ -136,7 +136,7 @@ public class SeamCarver {
         Arrays.fill(minDistTo[0], BORDER_ENERGY);
         int[][] minPixelTo = new int[pictureHeight][pictureWidth];
         double minTotalEnergy = Double.MAX_VALUE;
-        int minPathEndIdx = Integer.MAX_VALUE;
+        int minPathEndIdx = 0;
 
         // Traverse the DAG down row by row and store the lowest energy path and corresponding pixel's position
         for (int row = 1; row < pictureHeight; ++row) {
