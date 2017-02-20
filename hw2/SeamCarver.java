@@ -132,33 +132,36 @@ public class SeamCarver {
     }
 
     private int[] findSeam() {
-        double[][] minDistTo = new double[pictureHeight][pictureWidth];
-        Arrays.fill(minDistTo[0], BORDER_ENERGY);
+        double[] minDistTo = new double[pictureWidth];
+        Arrays.fill(minDistTo, BORDER_ENERGY);
         int[][] minPixelTo = new int[pictureHeight][pictureWidth];
+        double previousLeftValue = BORDER_ENERGY;
         double minTotalEnergy = Double.MAX_VALUE;
         int minPathEndIdx = 0;
 
         // Traverse the DAG down row by row and store the lowest energy path and corresponding pixel's position
         for (int row = 1; row < pictureHeight; ++row) {
+            // double previousLeftValue = minDistTo[0];
             for (int col = 0; col < pictureWidth; ++col) {
-                double upperLeft = (col == 0) ? Double.MAX_VALUE : minDistTo[row - 1][col - 1];
-                double upperCenter = minDistTo[row - 1][col];
-                double upperRight = (col == pictureWidth - 1) ? Double.MAX_VALUE : minDistTo[row - 1][col + 1];
+                double upperLeft = (col == 0) ? Double.MAX_VALUE : previousLeftValue;
+                double upperCenter = minDistTo[col];
+                double upperRight = (col == pictureWidth - 1) ? Double.MAX_VALUE : minDistTo[col + 1];
 
+                previousLeftValue = minDistTo[col];
                 if (upperLeft <= upperCenter && upperLeft <= upperRight) {
-                    minDistTo[row][col] = upperLeft + energyMatrix[row][col];
+                    minDistTo[col] = upperLeft + energyMatrix[row][col];
                     minPixelTo[row][col] = col - 1;
                 } else if (upperCenter <= upperLeft && upperCenter <= upperRight) {
-                    minDistTo[row][col] = upperCenter + energyMatrix[row][col];
+                    minDistTo[col] = upperCenter + energyMatrix[row][col];
                     minPixelTo[row][col] = col;
                 } else {
-                    minDistTo[row][col] = upperRight + energyMatrix[row][col];
+                    minDistTo[col] = upperRight + energyMatrix[row][col];
                     minPixelTo[row][col] = col + 1;
                 }
 
                 if (row == pictureHeight - 1) {
-                    if (minDistTo[row][col] < minTotalEnergy) {
-                        minTotalEnergy = minDistTo[row][col];
+                    if (minDistTo[col] < minTotalEnergy) {
+                        minTotalEnergy = minDistTo[col];
                         minPathEndIdx = col;
                     }
                 }
