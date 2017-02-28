@@ -7,104 +7,71 @@ import edu.princeton.cs.algs4.StdOut;
 
 public class BaseballElimination {
 
-    private Map<String, Team> teams;
-
-    private static class Team {
-        private String name;
-        private int wins;
-        private int losses;
-        private int remaining;
-        private Map<String, Integer> remainingAgainst;
-
-        public Team(String name, int wins, int losses, int remaining) {
-            this.name = name;
-            this.wins = wins;
-            this.losses = losses;
-            this.remaining = remaining;
-            this.remainingAgainst = new HashMap<>();
-        }
-
-        public int wins() {
-            return wins;
-        }
-
-        public int losses() {
-            return losses;
-        }
-
-        public int remaining() {
-            return remaining;
-        }
-
-        public void setRemainingAgainst(String team, int games) {
-            remainingAgainst.put(team, games);
-        }
-
-        public int getRemainingAgainst(String team) {
-            return remainingAgainst.get(team);
-        }
-    }
+    private Map<String, Integer> teamMap;
+    private Team[] teams;
 
     public BaseballElimination(String filename) {
-        this.teams = new HashMap<>();
+        this.teamMap = new HashMap<>();
 
         In in = new In(filename);
-        String[] teamNames = new String[in.readInt()];
-        String[] remainingAgainst = new String[teamNames.length];
-        int idx = 0;
+        int teamCount = in.readInt();
+        this.teams = new Team[teamCount + 1];
 
+        int idx = 1;
         while (!in.isEmpty()) {
-            teamNames[idx] = in.readString();
-            Team team = new Team(teamNames[idx], in.readInt(), in.readInt(), in.readInt());
-            teams.put(teamNames[idx], team);
-            remainingAgainst[idx] = in.readLine();
-            ++idx;
-        }
+            Team.TeamBuilder teamBuilder = new Team.TeamBuilder()
+                .setTeamCount(teamCount)
+                .setName(in.readString())
+                .setWins(in.readInt())
+                .setLosses(in.readInt())
+                .setRemaining(in.readInt());
 
-        for (int i = 0; i < remainingAgainst.length; ++i) {
-            String teamName = teamNames[i];
-            StringTokenizer tokenizer = new StringTokenizer(remainingAgainst[i]);
-            for (int j = 0; j < teamNames.length; ++j) {
-                String otherTeamName = teamNames[j];
-                int games = Integer.parseInt(tokenizer.nextToken());
-                teams.get(teamName).setRemainingAgainst(otherTeamName, games);
+            StringTokenizer tokenizer = new StringTokenizer(in.readLine());
+            for (int i = 1; i <= teamCount; ++i) {
+                int remainingGames = Integer.parseInt(tokenizer.nextToken());
+                teamBuilder.setRemainingAgainst(i, remainingGames);
             }
+
+            Team team = teamBuilder.build();
+            teams[idx] = team;
+            teamMap.put(team.name(), idx);
+            ++idx;
         }
     }
 
-    public int numberOfTeams() {
-        return teams.size();
+    public int numberOfTeamMap() {
+        return teamMap.size();
     }
 
     public Iterable<String> teams() {
-        return teams.keySet();
+        return teamMap.keySet();
     }
 
     // Number of wins for given team
     public int wins(String team) {
-        return teams.get(team).wins();
+        return teams[teamMap.get(team)].wins();
     }
 
     // Number of losses for given team
     public int losses(String team) {
-        return teams.get(team).losses();
+        return teams[teamMap.get(team)].losses();
     }
 
     // Number of remaining games for given team
     public int remaining(String team) {
-        return teams.get(team).remaining();
+        return teams[teamMap.get(team)].remaining();
     }
 
     // Number of remaining games between team1 and team2
     public int against(String team1, String team2) {
-        return teams.get(team1).getRemainingAgainst(team2);
+        return teams[teamMap.get(team1)].getRemainingAgainst(teamMap.get(team2));
     }
 
     public boolean isEliminated(String team) {
         return false;
     }
 
-    // Subset R of teams that eliminates given team; null if not eliminated
+    // Subset R of teamMap that eliminates given team; null if not eliminated
     public Iterable<String> certificateOfElimination(String team) {
         return null;
     }
